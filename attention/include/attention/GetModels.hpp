@@ -39,36 +39,26 @@ public:
   GetModels();
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
-  on_configure(const rclcpp_lifecycle::State & state);
-
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
   on_activate(const rclcpp_lifecycle::State & state);
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
   on_deactivate(const rclcpp_lifecycle::State & state);
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
-  on_cleanup(const rclcpp_lifecycle::State & state);
-
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
-  on_shutdown(const rclcpp_lifecycle::State & state);
-
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn 
-  on_error(const rclcpp_lifecycle::State & state);
-
   void do_work();
 
 private:
   rclcpp::Subscription<gazebo_msgs::msg::ModelStates>::SharedPtr sub_;
-  std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
+  ros2_knowledge_graph::GraphFactory graph_;
+
   std::vector<std::string> model_names;
+  std::vector<float> model_x_vector;
+  std::vector<float> model_y_vector;
   std::vector<std::vector<float>> model_pose;
 
-  /*
-  void add_nodes_to_graph();
   void model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg);
-  float get_distance(std::vector<float> a, std::vector<float> b);
-  */
+  std::vector<float> obtain_robot_pos();
+  void add_nodes_to_graph();
+
 };
 
 }  // namespace attention

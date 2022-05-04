@@ -23,8 +23,6 @@ int main(int argc, char * argv[])
 
   // auto node = std::make_shared<attention::GetModels>();
 
-  //node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
-
   // node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
 
   rclcpp::Rate rate(10);
