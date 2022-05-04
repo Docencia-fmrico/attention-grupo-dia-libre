@@ -48,7 +48,7 @@ Move::on_tick()
 BT::NodeStatus
 Move::on_success()
 {
-  RCLCPP_INFO(node_->get_logger(), "navigation Suceeded");
+  //RCLCPP_INFO(node_->get_logger(), "navigation Suceeded");
 
   return BT::NodeStatus::SUCCESS;
 }
@@ -56,7 +56,7 @@ Move::on_success()
 BT::NodeStatus
 Move::on_aborted()
 {
-  RCLCPP_INFO(node_->get_logger(), "couldnt reach target");
+  //RCLCPP_INFO(node_->get_logger(), "couldnt reach target");
 
   return BT::NodeStatus::FAILURE;
 }
@@ -64,7 +64,7 @@ Move::on_aborted()
 BT::NodeStatus
 Move::on_cancelled()
 {
-  RCLCPP_INFO(node_->get_logger(), "navigation cancelled");
+  //RCLCPP_INFO(node_->get_logger(), "navigation cancelled");
 
 
   return BT::NodeStatus::SUCCESS;

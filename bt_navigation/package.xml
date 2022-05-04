@@ -18,8 +18,8 @@
   <depend>lifecycle_msgs</depend>
   <depend>nav2_msgs</depend>
   <depend>libzmq3-dev</depend>
-  <depend>kobuki_ros_interfaces</depend>
   <depend>ament_index_cpp</depend>
+
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

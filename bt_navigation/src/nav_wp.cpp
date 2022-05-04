@@ -55,20 +55,23 @@ int main(int argc, char * argv[])
   std::string pkgpath = ament_index_cpp::get_package_share_directory("bt_navigation");
   std::string xml_file = pkgpath + "/behavior_tree_xml/behavior.xml";
 
+
   auto blackboard = BT::Blackboard::create();
+
   // quizas aqui añadir iterador a 0
   blackboard->set("node", node);
-  blackboard->set("index", index);
-  BT::Tree tree = factory.createTreeFromFile(xml_file, blackboard);
 
-  // Yo diria de quitar esto
-  auto publisher_zmq = std::make_shared<BT::PublisherZMQ>(tree, 10, 2666, 2667);
+  blackboard->set("index", index);
+
+  BT::Tree tree = factory.createTreeFromFile(xml_file, blackboard);
 
   rclcpp::Rate rate(10);
 
   bool finish = false;
   while (!finish && rclcpp::ok()) {
+
     finish = tree.rootNode()->executeTick() == BT::NodeStatus::SUCCESS;
+    std::cerr << "llega aqui" << std::endl;
 
     rclcpp::spin_some(node);
     rate.sleep();

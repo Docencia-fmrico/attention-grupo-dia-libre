@@ -52,11 +52,7 @@ GetNextWaypoint::GetNextWaypoint(
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(xml_tag_name, conf)
 {
-  // we create a subscriber to the map topic
-  map_ocuppancy_sub_ = node_->create_subscription<nav_msgs::msg::OccupancyGrid>(
-    "/map_occupancy", 10, std::bind(&GetNextWaypoint::map_cb, this, std::placeholders::_1));
-
-
+  
   config().blackboard->get("node", node_);
   map_ocuppancy_sub_ = node_->create_subscription<nav_msgs::msg::OccupancyGrid>(
     "/map_occupancy", 10, std::bind(&GetNextWaypoint::map_cb, this, std::placeholders::_1));
