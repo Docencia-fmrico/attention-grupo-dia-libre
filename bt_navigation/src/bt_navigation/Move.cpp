@@ -19,7 +19,6 @@
 
 #include "bt_navigation/Move.hpp"
 
-
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 
@@ -31,7 +30,7 @@ Move::Move(
   const std::string & xml_tag_name,
   const std::string & action_name,
   const BT::NodeConfiguration & conf)
-: bt_behavior::BtActionNode<nav2_msgs::action::NavigateToPose>(xml_tag_name, action_name,
+: bt_navigation::BtActionNode<nav2_msgs::action::NavigateToPose>(xml_tag_name, action_name,
     conf)
 {
 }
@@ -48,7 +47,7 @@ Move::on_tick()
 BT::NodeStatus
 Move::on_success()
 {
-  //RCLCPP_INFO(node_->get_logger(), "navigation Suceeded");
+  RCLCPP_INFO(node_->get_logger(), "navigation Suceeded");
 
   return BT::NodeStatus::SUCCESS;
 }
@@ -56,7 +55,7 @@ Move::on_success()
 BT::NodeStatus
 Move::on_aborted()
 {
-  //RCLCPP_INFO(node_->get_logger(), "couldnt reach target");
+  RCLCPP_INFO(node_->get_logger(), "couldnt reach target");
 
   return BT::NodeStatus::FAILURE;
 }
@@ -64,8 +63,7 @@ Move::on_aborted()
 BT::NodeStatus
 Move::on_cancelled()
 {
-  //RCLCPP_INFO(node_->get_logger(), "navigation cancelled");
-
+  RCLCPP_INFO(node_->get_logger(), "navigation cancelled");
 
   return BT::NodeStatus::SUCCESS;
 }

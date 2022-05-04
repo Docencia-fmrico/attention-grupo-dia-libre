@@ -14,7 +14,6 @@
 
 #include <string>
 #include <iostream>
-#include <vector>
 
 #include "bt_navigation/IsRaceFinished.hpp"
 
@@ -46,6 +45,7 @@ IsRaceFinished::halt()
 BT::NodeStatus
 IsRaceFinished::tick()
 {
+
   int ind;
   config().blackboard->get("index", ind);
 
@@ -55,7 +55,7 @@ IsRaceFinished::tick()
   std::cout << "Index:" << ind << " ,WP size: " << wp_ids.size() << std::endl;
 
   if (ind == wp_ids.size()) {
-    config().blackboard->get("index", ind);
+    return BT::NodeStatus::SUCCESS;
   }
   return BT::NodeStatus::FAILURE;
 }

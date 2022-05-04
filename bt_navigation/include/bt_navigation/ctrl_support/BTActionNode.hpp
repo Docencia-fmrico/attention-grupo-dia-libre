@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef BT_BEHAVIOR__CTRL_SUPPORT__BTACTIONNODE_HPP_
-#define BT_BEHAVIOR__CTRL_SUPPORT__BTACTIONNODE_HPP_
+#ifndef bt_navigation__CTRL_SUPPORT__BTACTIONNODE_HPP_
+#define bt_navigation__CTRL_SUPPORT__BTACTIONNODE_HPP_
 
 #include <memory>
 #include <string>
@@ -22,7 +22,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
-namespace bt_behavior
+namespace bt_navigation
 {
 
 using namespace std::chrono_literals;  // NOLINT
@@ -271,6 +271,6 @@ protected:
 };
 
 
-}  // namespace bt_behavior
+}  // namespace bt_navigation
 
-#endif  // BT_BEHAVIOR__CTRL_SUPPORT__BTACTIONNODE_HPP_
+#endif  // bt_navigation__CTRL_SUPPORT__BTACTIONNODE_HPP_
