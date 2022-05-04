@@ -15,22 +15,23 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include "attention/GetModels.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto node = std::make_shared<attention::GetModels>();
+  // auto node = std::make_shared<attention::GetModels>();
 
-  node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  //node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
 
-  node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+  // node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
 
   rclcpp::Rate rate(10);
   while (rclcpp::ok()) {
-    node->do_work();
+    //node->do_work();
 
-    rclcpp::spin_some(node->get_node_base_interface());
+    // rclcpp::spin_some(node->get_node_base_interface());
     rate.sleep();
   }
 
@@ -38,25 +39,3 @@ int main(int argc, char * argv[])
 
   return 0;
 }
-
-/*
-int main(int argc, char * argv[])
-{
-  rclcpp::init(argc, argv);
-
-  auto node = std::make_shared<LifeCycleNodeExample>();
-
-  rclcpp::Rate rate(5);
-  while (rclcpp::ok()) {
-    node->do_work();
-
-    rclcpp::spin_some(node->get_node_base_interface());
-    rate.sleep();
-  }
-  
-
-  rclcpp::shutdown();
-
-  return 0;
-}
-*/

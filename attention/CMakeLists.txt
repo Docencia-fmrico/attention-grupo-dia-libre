@@ -13,12 +13,13 @@ find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(ros2_knowledge_graph REQUIRED)
 
 find_package(ZMQ)
 if(ZMQ_FOUND)
     message(STATUS "ZeroMQ found.")
     add_definitions(-DZMQ_FOUND)
-else()
+else()  
   message(WARNING "ZeroMQ NOT found. Not including PublisherZMQ.")
 endif()
 
@@ -31,10 +32,15 @@ set(dependencies
     geometry_msgs
     gazebo_msgs
     ament_index_cpp
+    ros2_knowledge_graph
 )
 
 include_directories(include ${ZMQ_INCLUDE_DIRS})
 
+add_library(${PROJECT_NAME} SHARED
+  src/attention/GetModels.cpp
+)
+ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
 add_executable(get_models_node src/get_models_node.cpp)
 ament_target_dependencies(get_models_node ${dependencies})
