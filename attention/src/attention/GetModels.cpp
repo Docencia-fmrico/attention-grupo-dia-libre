@@ -24,7 +24,6 @@
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 #include "attention/GetModels.hpp"
-#include "ros2_knowledge_graph/GraphNode.hpp"
 
 namespace attention {
 
@@ -41,9 +40,7 @@ CallbackReturnT
 GetModels::on_activate(const rclcpp_lifecycle::State & state) 
 {
   RCLCPP_INFO(get_logger(), "[%s] Activating from [%s] state. Creating subscriber", get_name(), state.label().c_str());
-  
-  //speed_ = get_parameter("speed").get_value<double>();
-  
+    
   tfs_placed = false;
   sub_ = create_subscription<gazebo_msgs::msg::ModelStates>(
     "/gazebo/model_states", 10, std::bind(&GetModels::model_state_cb, this, _1));
@@ -52,7 +49,10 @@ GetModels::on_activate(const rclcpp_lifecycle::State & state)
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   transform_listener_ =std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-  //publicar robot
+  graph_ = std::make_shared<ros2_knowledge_graph::GraphNode>(shared_from_this());
+
+  auto node_1 = ros2_knowledge_graph::new_node("World", "object");
+  graph_->update_node(node_1);
   
   return CallbackReturnT::SUCCESS;
 }
@@ -62,16 +62,15 @@ GetModels::on_deactivate(const rclcpp_lifecycle::State & state)
 {
   RCLCPP_INFO(get_logger(), "[%s] Deactivating from [%s] state...", get_name(), state.label().c_str());
   sub_ = nullptr;
-  graph_.cleanUp();
   return CallbackReturnT::SUCCESS;
 }
 
 void 
 GetModels::do_work() 
 {
-  if (model_names.size() > 0)
+  if (tfs_in_range.size() > 0)
   {
-      GetModels::add_nodes_to_graph();
+    GetModels::add_nodes_to_graph();
   }
 }
 
@@ -86,19 +85,41 @@ get_distance(std::vector<float> a, std::vector<float> b)
 void 
 GetModels::add_nodes_to_graph()
 {
-  for (int i = 0; i < model_names.size(); ++i)
+  for (int i = 0; i < tfs_in_range.size(); ++i)
   {
-      ros2_knowledge_graph_msgs::msg::Node obj;
-      ros2_knowledge_graph_msgs::msg::Edge edge;
-      ros2_knowledge_graph_msgs::msg::Content position;
-      obj.node_name = model_names[i];
+    bool node_in_list = false;
+    std::string node_name;
+    auto node_1 = ros2_knowledge_graph::new_node(tfs_in_range[i], "object");
+    graph_->update_node(node_1);
 
-      ros2_knowledge_graph::GraphNode * node_to_add = graph_.getInstance(shared_from_this());
+    auto edge_1 = ros2_knowledge_graph::new_edge(tfs_in_range[i], "World", tfs_to_graph[i]);
+    graph_->update_edge(edge_1);
 
 
-      //graph_->update_edges(robot_position, obj.node_name, "wont see")
-      //graph_->update_edges(robot_position, obj.node_name, model_pose[i]);
+    for (int j = 0; j < nodes_in_graph.size(); j++) {
+      if (nodes_in_graph[j] ==  tfs_in_range[i]) {
+        node_in_list = true;
+        break;
+      }
+    }
 
+    if (!node_in_list) {
+      nodes_in_graph.push_back(tfs_in_range[i]);
+    } 
+    
+    for (int j = 0; j < nodes_in_graph.size(); j++) {
+      bool tf_in_range = false;
+      for (int k = 0; k < tfs_in_range.size(); k++){
+        if (nodes_in_graph[j] == tfs_in_range[k]) {
+          tf_in_range = true;
+          break;
+        }
+      }
+      if (!tf_in_range) {
+        graph_->remove_node(nodes_in_graph[i]);
+        nodes_in_graph.erase(nodes_in_graph.begin() + i);
+      }
+    }
   }
 }
 
@@ -159,7 +180,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   robot_position.push_back(tiago_tf.transform.translation.y);
 
   tfs_in_range.clear();
-  tfs_positions.clear();
+  tfs_to_graph.clear();
 
   for (int i = 0; i < model_names.size(); i++) {
 
@@ -180,18 +201,19 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
 
     float distance_between_tfs = get_distance(robot_position, object_position);
 
-    if (distance_between_tfs < 2) {
+    if (distance_between_tfs < 5) {
       tfs_in_range.push_back(model_names[i]);
-      tfs_positions.push_back(object_position);
+
+      tfs_to_graph.push_back(tf_to_check);
     }
 
-    std::cout << "Checking " << model_names[i] << " with distance " << distance_between_tfs << std::endl;
+    //std::cout << "Checking " << model_names[i] << " with distance " << distance_between_tfs << std::endl;
     
   }
   std::cout << "------------------" << std::endl;
 
   for (int i = 0; i < tfs_in_range.size(); i++) {
-    std::cout << "TF " << tfs_in_range[i] << " in position (" << tfs_positions[i][0] << "," << tfs_positions[i][1] << ") is in range" << std::endl;
+    std::cout << "TF " << tfs_in_range[i] << " in position (" << tfs_to_graph[i].transform.translation.x  << "," << tfs_to_graph[i].transform.translation.y << ") respect robot is in range" << std::endl;
   }
 
   std::cout << "------------------" << std::endl;
