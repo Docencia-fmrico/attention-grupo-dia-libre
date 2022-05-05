@@ -25,6 +25,16 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "gazebo_msgs/msg/model_states.hpp"
 
+#include "tf2/transform_datatypes.h"
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/static_transform_broadcaster.h"
+#include "tf2/LinearMath/Transform.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2/convert.h"
+
+#include "geometry_msgs/msg/transform_stamped.hpp"
+
+#include "ros2_knowledge_graph/graph_utils.hpp"
 #include "ros2_knowledge_graph/GraphNode.hpp"
 
 #define RIGHT -1
@@ -48,16 +58,23 @@ public:
 
 private:
   rclcpp::Subscription<gazebo_msgs::msg::ModelStates>::SharedPtr sub_;
-  ros2_knowledge_graph::GraphFactory graph_;
-
+  std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
+  
   std::vector<std::string> model_names;
-  std::vector<float> model_x_vector;
-  std::vector<float> model_y_vector;
-  std::vector<std::vector<float>> model_pose;
+  
+  std::vector<std::string> tfs_in_range;
+  std::vector<geometry_msgs::msg::TransformStamped> tfs_to_graph;
+
+  std::vector<std::string> nodes_in_graph;
 
   void model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg);
-  std::vector<float> obtain_robot_pos();
   void add_nodes_to_graph();
+  void place_tfs(const gazebo_msgs::msg::ModelStates::SharedPtr msg);
+
+  bool tfs_placed;
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
 
 };
 
