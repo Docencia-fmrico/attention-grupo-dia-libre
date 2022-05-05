@@ -21,6 +21,7 @@
   <depend>kobuki_ros_interfaces</depend>
   <depend>ament_index_cpp</depend>
   <depend>ros2_knowledge_graph</depend>
+  <depend>trajectory_msgs</depend>
 
 
   <test_depend>ament_lint_auto</test_depend>

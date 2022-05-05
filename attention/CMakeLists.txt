@@ -14,6 +14,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(ros2_knowledge_graph REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 
 find_package(ZMQ)
 if(ZMQ_FOUND)
@@ -33,6 +34,7 @@ set(dependencies
     gazebo_msgs
     ament_index_cpp
     ros2_knowledge_graph
+    trajectory_msgs
 )
 
 include_directories(include ${ZMQ_INCLUDE_DIRS})
@@ -58,6 +60,22 @@ install(DIRECTORY include/
   DESTINATION include/
 )
 
+
+add_executable(head_node src/set_headjoint.cpp)
+ament_target_dependencies(head_node ${dependencies})
+target_link_libraries(head_node ${ZMQ_LIBRARIES})
+
+install(TARGETS
+  ${plugin_libs}
+  head_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
