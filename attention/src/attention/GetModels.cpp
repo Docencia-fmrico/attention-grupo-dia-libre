@@ -40,12 +40,17 @@ GetModels::GetModels()
 CallbackReturnT 
 GetModels::on_activate(const rclcpp_lifecycle::State & state) 
 {
-  RCLCPP_INFO(get_logger(), "[%s] Activating from [%s] state...", get_name(), state.label().c_str());
+  RCLCPP_INFO(get_logger(), "[%s] Activating from [%s] state. Creating subscriber", get_name(), state.label().c_str());
   
   //speed_ = get_parameter("speed").get_value<double>();
   
+  tfs_placed = false;
   sub_ = create_subscription<gazebo_msgs::msg::ModelStates>(
-    "/scan_filtered", 10, std::bind(&GetModels::model_state_cb, this, _1));
+    "/gazebo/model_states", 10, std::bind(&GetModels::model_state_cb, this, _1));
+
+  broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(shared_from_this());
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+  transform_listener_ =std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   //publicar robot
   
@@ -60,8 +65,6 @@ GetModels::on_deactivate(const rclcpp_lifecycle::State & state)
   graph_.cleanUp();
   return CallbackReturnT::SUCCESS;
 }
-
-
 
 void 
 GetModels::do_work() 
@@ -80,17 +83,6 @@ get_distance(std::vector<float> a, std::vector<float> b)
   return abs(sqrt(dif_x + dif_y));
 }
 
-std::vector <float>
-GetModels::obtain_robot_pos() {
-  std::vector <float> empty_vect;
-  for (int i = 0; i < model_names.size(); i++) {
-    if (model_names[i] == "Tiago") {
-      return model_pose[i];
-    }
-  }
-  return empty_vect;
-}
-
 void 
 GetModels::add_nodes_to_graph()
 {
@@ -103,54 +95,107 @@ GetModels::add_nodes_to_graph()
 
       ros2_knowledge_graph::GraphNode * node_to_add = graph_.getInstance(shared_from_this());
 
-      std::vector <float> robot_position = GetModels::obtain_robot_pos();
-      if (abs(get_distance(robot_position,model_pose[i])) > 5) //meter las coords del robot aqui
-      {
-          //graph_->update_edges(robot_position, obj.node_name, "wont see")
-      }
+
+      //graph_->update_edges(robot_position, obj.node_name, "wont see")
       //graph_->update_edges(robot_position, obj.node_name, model_pose[i]);
 
   }
 }
 
 void
-GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
-{
-  bool not_there = true;
-  std::vector<float> robot_position;
-  for (int i = 0; i < msg->name.size(); ++i)
-  {
-    if (msg->name[i] == "Tiago") {
-      robot_position.push_back(msg->pose[i].position.x);
-      robot_position.push_back(msg->pose[i].position.y);
-      break;
+GetModels::place_tfs(const gazebo_msgs::msg::ModelStates::SharedPtr msg) {
+  
+  for (int i = 0; i < msg->name.size(); i++) {
+    if ((msg->name[i] != "tiago") && (msg->name[i] != "ground_plane")) {
+      geometry_msgs::msg::TransformStamped tf_to_create;
+      
+      tf_to_create.header.stamp = now();
+      tf_to_create.header.frame_id = "odom";
+      tf_to_create.child_frame_id = msg->name[i];
+
+      tf_to_create.transform.translation.x = msg->pose[i].position.x;
+      tf_to_create.transform.translation.y = msg->pose[i].position.y;
+      tf_to_create.transform.translation.z = 0;
+
+      tf2::Quaternion q;
+
+      q.setRPY(0, 0, 0);
+
+      tf_to_create.transform.rotation.x = q.x();
+      tf_to_create.transform.rotation.y = q.y();
+      tf_to_create.transform.rotation.z = q.z();
+      tf_to_create.transform.rotation.w = q.w();
+
+      broadcaster_->sendTransform(tf_to_create);
+      model_names.push_back(msg->name[i]);
     }
   }
+}
 
-  if (robot_position.size() == 0) {
-    std::cerr << "ERROR: did not find tiago robot" << std::endl;
+void
+GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
+{
+  
+  if (!tfs_placed) {
+    place_tfs(msg);
+    tfs_placed = true;
+  }
+
+  std::string transform_base_to = "odom";
+  std::string tiago_tf_from = "base_footprint";
+
+  geometry_msgs::msg::TransformStamped tiago_tf;
+
+  try { tiago_tf = tf_buffer_->lookupTransform(
+          tiago_tf_from, transform_base_to,
+          tf2::TimePointZero);
+  } catch (tf2::TransformException & ex) {
+    RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", transform_base_to.c_str(), tiago_tf_from.c_str(), ex.what());
     return;
   }
 
-  for (int i = 0; i < msg->name.size(); i++) {
-    for (int j = 0; j <  model_names.size(); j++) {
-      if (msg->name[i] == model_names[j]) {
-        std::vector<float> model_pos;
-        model_pos.push_back(msg->pose[i].position.x);
-        model_pos.push_back(msg->pose[i].position.y);
-        if (get_distance(model_pos, robot_position) > 5) {
-          model_names.erase(model_names.begin() + j);
-          model_x_vector.erase(model_x_vector.begin() + j);
-          model_y_vector.erase(model_y_vector.begin() + j);
-        }
-        break;
-      }
-      model_names.push_back(msg->name[i]);
-      model_x_vector.push_back(msg->pose[i].position.x);
-      model_y_vector.push_back(msg->pose[i].position.y);
+  std::vector<float> robot_position;
+  robot_position.push_back(tiago_tf.transform.translation.x);
+  robot_position.push_back(tiago_tf.transform.translation.y);
+
+  tfs_in_range.clear();
+  tfs_positions.clear();
+
+  for (int i = 0; i < model_names.size(); i++) {
+
+    std::string object_transform_from = model_names[i];
+    geometry_msgs::msg::TransformStamped tf_to_check;
+
+    try { tf_to_check = tf_buffer_->lookupTransform(
+            object_transform_from, transform_base_to,
+            tf2::TimePointZero);
+    } catch (tf2::TransformException & ex) {
+      RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", transform_base_to.c_str(), object_transform_from.c_str(), ex.what());
+      return;
     }
+    
+    std::vector<float> object_position;
+    object_position.push_back(tf_to_check.transform.translation.x);
+    object_position.push_back(tf_to_check.transform.translation.y);
+
+    float distance_between_tfs = get_distance(robot_position, object_position);
+
+    if (distance_between_tfs < 2) {
+      tfs_in_range.push_back(model_names[i]);
+      tfs_positions.push_back(object_position);
+    }
+
+    std::cout << "Checking " << model_names[i] << " with distance " << distance_between_tfs << std::endl;
+    
+  }
+  std::cout << "------------------" << std::endl;
+
+  for (int i = 0; i < tfs_in_range.size(); i++) {
+    std::cout << "TF " << tfs_in_range[i] << " in position (" << tfs_positions[i][0] << "," << tfs_positions[i][1] << ") is in range" << std::endl;
   }
 
+  std::cout << "------------------" << std::endl;
+  
 }
 
 }

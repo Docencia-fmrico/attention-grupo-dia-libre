@@ -14,6 +14,11 @@ find_package(geometry_msgs REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(ros2_knowledge_graph REQUIRED)
+find_package(ros2_knowledge_graph_msgs REQUIRED)
+
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 find_package(ZMQ)
 if(ZMQ_FOUND)
@@ -33,6 +38,11 @@ set(dependencies
     gazebo_msgs
     ament_index_cpp
     ros2_knowledge_graph
+    ros2_knowledge_graph_msgs
+    
+    tf2
+    tf2_ros
+    tf2_geometry_msgs
 )
 
 include_directories(include ${ZMQ_INCLUDE_DIRS})
@@ -44,7 +54,7 @@ ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
 add_executable(get_models_node src/get_models_node.cpp)
 ament_target_dependencies(get_models_node ${dependencies})
-target_link_libraries(get_models_node ${ZMQ_LIBRARIES})
+target_link_libraries(get_models_node ${PROJECT_NAME})
 
 install(TARGETS
   ${plugin_libs}
