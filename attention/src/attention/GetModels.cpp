@@ -25,6 +25,10 @@
 
 #include "attention/GetModels.hpp"
 
+#include <iostream>
+#include <cstdlib>
+#include <unistd.h>
+
 namespace attention {
 
 using rcl_interfaces::msg::ParameterType;
@@ -68,10 +72,6 @@ GetModels::on_deactivate(const rclcpp_lifecycle::State & state)
 void 
 GetModels::do_work() 
 {
-  if (tfs_in_range.size() > 0)
-  {
-    GetModels::add_nodes_to_graph();
-  }
 }
 
 float 
@@ -80,49 +80,6 @@ get_distance(std::vector<float> a, std::vector<float> b)
   float dif_x = (a[0]-b[0])*(a[0]-b[0]);
   float dif_y = (a[1]-b[1])*(a[1]-b[1]);
   return abs(sqrt(dif_x + dif_y));
-}
-
-void 
-GetModels::add_nodes_to_graph()
-{
-  for (int i = 0; i < tfs_in_range.size(); ++i)
-  {
-    bool node_in_list = false;
-    std::string node_name;
-    auto node_1 = ros2_knowledge_graph::new_node(tfs_in_range[i], "object");
-    graph_->update_node(node_1);
-
-    auto edge_1 = ros2_knowledge_graph::new_edge(tfs_in_range[i], "World", tfs_to_graph[i]);
-    graph_->update_edge(edge_1);
-
-
-    for (int j = 0; j < nodes_in_graph.size(); j++) {
-      if (nodes_in_graph[j] ==  tfs_in_range[i]) {
-        node_in_list = true;
-        break;
-      }
-    }
-
-    if (!node_in_list) {
-      nodes_in_graph.push_back(tfs_in_range[i]);
-    } 
-    
-    for (int j = 0; j < nodes_in_graph.size(); j++) {
-      bool tf_in_range = false;
-      for (int k = 0; k < tfs_in_range.size(); k++){
-        if (nodes_in_graph[j] == tfs_in_range[k]) {
-          tf_in_range = true;
-          break;
-        }
-      }
-      if (!tf_in_range) {
-        std::cout << "NODE " << nodes_in_graph[i] << " NOT IN RANGE. DELETING" << std::endl; 
-        graph_->remove_node(nodes_in_graph[i]);
-        graph_->remove_edge(edge_1);
-        nodes_in_graph.erase(nodes_in_graph.begin() + i);
-      }
-    }
-  }
 }
 
 void
@@ -181,9 +138,6 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   robot_position.push_back(tiago_tf.transform.translation.x);
   robot_position.push_back(tiago_tf.transform.translation.y);
 
-  tfs_in_range.clear();
-  tfs_to_graph.clear();
-
   for (int i = 0; i < model_names.size(); i++) {
 
     std::string object_transform_from = model_names[i];
@@ -203,20 +157,25 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
 
     float distance_between_tfs = get_distance(robot_position, object_position);
 
+    auto node_1 = ros2_knowledge_graph::new_node(model_names[i], "object");
+    graph_->update_node(node_1);
+
     if (distance_between_tfs < 5) {
-      tfs_in_range.push_back(model_names[i]);
-      tfs_to_graph.push_back(tf_to_check);
+      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", tf_to_check);
+      graph_->update_edge(edge_1);
+    } else {
+      geometry_msgs::msg::TransformStamped empty_tf;
+      empty_tf.transform.translation.x = 0;
+      empty_tf.transform.translation.y = 0;
+      empty_tf.transform.translation.z = 0;
+      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", empty_tf);
+      graph_->update_edge(edge_1);
     }
     
+    auto edges_ret_st = graph_->get_edges<geometry_msgs::msg::TransformStamped>(model_names[i], "World");
+     usleep(1000);
+    
   }
-  std::cout << "------------------" << std::endl;
-
-  for (int i = 0; i < tfs_in_range.size(); i++) {
-    std::cout << "TF " << tfs_in_range[i] << " in position (" << tfs_to_graph[i].transform.translation.x  << "," << tfs_to_graph[i].transform.translation.y << ") respect robot is in range" << std::endl;
-  }
-
-  std::cout << "------------------" << std::endl;
-  
 }
 
 }
