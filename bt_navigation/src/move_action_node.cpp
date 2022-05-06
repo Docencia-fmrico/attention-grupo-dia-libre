@@ -65,6 +65,10 @@ public:
     wp.pose.position.y = 0.0894;
     waypoints_["room5"] = wp;
 
+    wp.pose.position.x = 0.02;
+    wp.pose.position.y = 0.02;
+    waypoints_["room6"] = wp;
+
 
     using namespace std::placeholders;
     pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(

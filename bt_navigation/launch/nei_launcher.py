@@ -52,20 +52,6 @@ def generate_launch_description():
         output='screen',
         parameters=[])
 
-    pick_cmd = Node(
-        package='bt_navigation',
-        executable='pick_action_node',
-        name='pick_action_node',
-        output='screen',
-        parameters=[])
-
-    drop_cmd = Node(
-        package='bt_navigation',
-        executable='drop_action_node',
-        name='drop_action_node',
-        output='screen',
-        parameters=[])
-
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -74,7 +60,5 @@ def generate_launch_description():
     #ld.add_action(nav2_cmd)
 
     ld.add_action(move_cmd)
-    ld.add_action(pick_cmd)
-    ld.add_action(drop_cmd)
 
     return ld
