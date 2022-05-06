@@ -116,7 +116,9 @@ GetModels::add_nodes_to_graph()
         }
       }
       if (!tf_in_range) {
+        std::cout << "NODE " << nodes_in_graph[i] << " NOT IN RANGE. DELETING" << std::endl; 
         graph_->remove_node(nodes_in_graph[i]);
+        graph_->remove_edge(edge_1);
         nodes_in_graph.erase(nodes_in_graph.begin() + i);
       }
     }
@@ -168,7 +170,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   geometry_msgs::msg::TransformStamped tiago_tf;
 
   try { tiago_tf = tf_buffer_->lookupTransform(
-          tiago_tf_from, transform_base_to,
+          transform_base_to, tiago_tf_from,
           tf2::TimePointZero);
   } catch (tf2::TransformException & ex) {
     RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", transform_base_to.c_str(), tiago_tf_from.c_str(), ex.what());
@@ -188,7 +190,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
     geometry_msgs::msg::TransformStamped tf_to_check;
 
     try { tf_to_check = tf_buffer_->lookupTransform(
-            object_transform_from, transform_base_to,
+            transform_base_to, object_transform_from,
             tf2::TimePointZero);
     } catch (tf2::TransformException & ex) {
       RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", transform_base_to.c_str(), object_transform_from.c_str(), ex.what());
@@ -203,11 +205,8 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
 
     if (distance_between_tfs < 5) {
       tfs_in_range.push_back(model_names[i]);
-
       tfs_to_graph.push_back(tf_to_check);
     }
-
-    //std::cout << "Checking " << model_names[i] << " with distance " << distance_between_tfs << std::endl;
     
   }
   std::cout << "------------------" << std::endl;
