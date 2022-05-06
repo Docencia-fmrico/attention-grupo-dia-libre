@@ -41,15 +41,12 @@ set(dependencies
     gazebo_msgs
     ament_index_cpp
     ros2_knowledge_graph
-<<<<<<< HEAD
     trajectory_msgs
-=======
     ros2_knowledge_graph_msgs
     
     tf2
     tf2_ros
     tf2_geometry_msgs
->>>>>>> origin/graph-work
 )
 
 include_directories(include ${ZMQ_INCLUDE_DIRS})

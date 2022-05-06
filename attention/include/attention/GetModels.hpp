@@ -62,7 +62,7 @@ private:
   
   std::vector<std::string> model_names;
   
-  std::vector<std::string> tfs_in_range;
+  std::vector<std::string> tfs_name;
   std::vector<geometry_msgs::msg::TransformStamped> tfs_to_graph;
 
   std::vector<std::string> nodes_in_graph;

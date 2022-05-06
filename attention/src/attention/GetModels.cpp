@@ -68,7 +68,7 @@ GetModels::on_deactivate(const rclcpp_lifecycle::State & state)
 void 
 GetModels::do_work() 
 {
-  if (tfs_in_range.size() > 0)
+  if (tfs_name.size() > 0)
   {
     GetModels::add_nodes_to_graph();
   }
@@ -85,32 +85,32 @@ get_distance(std::vector<float> a, std::vector<float> b)
 void 
 GetModels::add_nodes_to_graph()
 {
-  for (int i = 0; i < tfs_in_range.size(); ++i)
+  for (int i = 0; i < tfs_name.size(); ++i)
   {
     bool node_in_list = false;
     std::string node_name;
-    auto node_1 = ros2_knowledge_graph::new_node(tfs_in_range[i], "object");
+    auto node_1 = ros2_knowledge_graph::new_node(tfs_name[i], "object");
     graph_->update_node(node_1);
 
-    auto edge_1 = ros2_knowledge_graph::new_edge(tfs_in_range[i], "World", tfs_to_graph[i]);
+    auto edge_1 = ros2_knowledge_graph::new_edge("World", tfs_name[i], tfs_to_graph[i]);
     graph_->update_edge(edge_1);
 
 
     for (int j = 0; j < nodes_in_graph.size(); j++) {
-      if (nodes_in_graph[j] ==  tfs_in_range[i]) {
+      if (nodes_in_graph[j] ==  tfs_name[i]) {
         node_in_list = true;
         break;
       }
     }
 
     if (!node_in_list) {
-      nodes_in_graph.push_back(tfs_in_range[i]);
+      nodes_in_graph.push_back(tfs_name[i]);
     } 
     
     for (int j = 0; j < nodes_in_graph.size(); j++) {
       bool tf_in_range = false;
-      for (int k = 0; k < tfs_in_range.size(); k++){
-        if (nodes_in_graph[j] == tfs_in_range[k]) {
+      for (int k = 0; k < tfs_name.size(); k++){
+        if (nodes_in_graph[j] == tfs_name[k]) {
           tf_in_range = true;
           break;
         }
@@ -149,6 +149,7 @@ GetModels::place_tfs(const gazebo_msgs::msg::ModelStates::SharedPtr msg) {
 
       broadcaster_->sendTransform(tf_to_create);
       model_names.push_back(msg->name[i]);
+      std::cerr << msg->name[i] << std::endl;
     }
   }
 }
@@ -168,7 +169,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   geometry_msgs::msg::TransformStamped tiago_tf;
 
   try { tiago_tf = tf_buffer_->lookupTransform(
-          tiago_tf_from, transform_base_to,
+           transform_base_to, tiago_tf_from,
           tf2::TimePointZero);
   } catch (tf2::TransformException & ex) {
     RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", transform_base_to.c_str(), tiago_tf_from.c_str(), ex.what());
@@ -179,7 +180,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   robot_position.push_back(tiago_tf.transform.translation.x);
   robot_position.push_back(tiago_tf.transform.translation.y);
 
-  tfs_in_range.clear();
+  tfs_name.clear();
   tfs_to_graph.clear();
 
   for (int i = 0; i < model_names.size(); i++) {
@@ -202,7 +203,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
     float distance_between_tfs = get_distance(robot_position, object_position);
 
     if (distance_between_tfs < 5) {
-      tfs_in_range.push_back(model_names[i]);
+      tfs_name.push_back(model_names[i]);
 
       tfs_to_graph.push_back(tf_to_check);
     }
@@ -212,8 +213,8 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   }
   std::cout << "------------------" << std::endl;
 
-  for (int i = 0; i < tfs_in_range.size(); i++) {
-    std::cout << "TF " << tfs_in_range[i] << " in position (" << tfs_to_graph[i].transform.translation.x  << "," << tfs_to_graph[i].transform.translation.y << ") respect robot is in range" << std::endl;
+  for (int i = 0; i < tfs_name.size(); i++) {
+    std::cout << "TF " << tfs_name[i] << " in position (" << tfs_to_graph[i].transform.translation.x  << "," << tfs_to_graph[i].transform.translation.y << ") respect robot is in range" << std::endl;
   }
 
   std::cout << "------------------" << std::endl;
