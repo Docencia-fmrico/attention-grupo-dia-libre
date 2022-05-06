@@ -92,9 +92,11 @@ GetModels::add_nodes_to_graph()
     auto node_1 = ros2_knowledge_graph::new_node(tfs_name[i], "object");
     graph_->update_node(node_1);
 
-    auto edge_1 = ros2_knowledge_graph::new_edge("World", tfs_name[i], tfs_to_graph[i]);
+    auto edge_1 = ros2_knowledge_graph::new_edge(tfs_name[i], "World", tfs_to_graph[i]);
     graph_->update_edge(edge_1);
 
+    tfs_name.clear();
+    tfs_to_graph.clear();
 
     for (int j = 0; j < nodes_in_graph.size(); j++) {
       if (nodes_in_graph[j] ==  tfs_name[i]) {
@@ -182,8 +184,8 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   robot_position.push_back(tiago_tf.transform.translation.x);
   robot_position.push_back(tiago_tf.transform.translation.y);
 
-  tfs_name.clear();
-  tfs_to_graph.clear();
+  //tfs_name.clear();
+  //tfs_to_graph.clear();
 
   for (int i = 0; i < model_names.size(); i++) {
 
