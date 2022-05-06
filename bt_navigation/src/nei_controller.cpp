@@ -179,7 +179,7 @@ public:
 
               // Execute the plan
               if (executor_client_->start_plan_execution(plan.value())) {
-                state_ = P3;
+                state_ = P4;
               }
             } else {
               for (const auto & action_feedback : feedback.action_execution_status) {
@@ -219,7 +219,7 @@ public:
 
           if (!executor_client_->execute_and_check_plan() && executor_client_->getResult()) {
             if (executor_client_->getResult().value().success) {
-              std::cout << "Successful finished " << std::endl;
+              std::cout << "Successful finished last plan, going to start" << std::endl;
 
               // Set the goal for next state
               problem_expert_->setGoal(plansys2::Goal("(and(robotat tiago room4))"));
@@ -237,51 +237,8 @@ public:
 
               // Execute the plan
               if (executor_client_->start_plan_execution(plan.value())) {
-                state_ = F_P4;
+                state_ = P2;
               }
-            } else {
-              for (const auto & action_feedback : feedback.action_execution_status) {
-                if (action_feedback.status == plansys2_msgs::msg::ActionExecutionInfo::FAILED) {
-                  std::cout << "[" << action_feedback.action << "] finished with error: " <<
-                    action_feedback.message_status << std::endl;
-                }
-              }
-
-              // Replan
-              auto domain = domain_expert_->getDomain();
-              auto problem = problem_expert_->getProblem();
-              auto plan = planner_client_->getPlan(domain, problem);
-
-              if (!plan.has_value()) {
-                std::cout << "Unsuccessful replan attempt to reach goal " <<
-                  parser::pddl::toString(problem_expert_->getGoal()) << std::endl;
-                break;
-              }
-
-              // Execute the plan
-              executor_client_->start_plan_execution(plan.value());
-            }
-          }
-        }
-        break;
-      case F_P4:
-        {
-          auto feedback = executor_client_->getFeedBack();
-
-          for (const auto & action_feedback : feedback.action_execution_status) {
-            std::cout << "[" << action_feedback.action << " " <<
-              action_feedback.completion * 100.0 << "%]";
-          }
-          std::cout << std::endl;
-
-          if (!executor_client_->execute_and_check_plan() && executor_client_->getResult()) {
-            if (executor_client_->getResult().value().success) {
-              std::cout << "Successful finished " << std::endl;
-
-              // Cleanning up
-          
-              state_ = P2;
-
             } else {
               for (const auto & action_feedback : feedback.action_execution_status) {
                 if (action_feedback.status == plansys2_msgs::msg::ActionExecutionInfo::FAILED) {
@@ -315,7 +272,7 @@ public:
   }
 
 private:
-  typedef enum {P1, P2, P3, P4, F_P4, END} Problem;
+  typedef enum {P1, P2, P3, P4} Problem;
   Problem state_;
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
   std::shared_ptr<plansys2::PlannerClient> planner_client_;
