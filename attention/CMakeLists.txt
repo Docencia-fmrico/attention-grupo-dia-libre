@@ -53,7 +53,9 @@ include_directories(include ${ZMQ_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} SHARED
   src/attention/GetModels.cpp
+  src/attention/Observator.cpp
 )
+
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
 add_executable(get_models_node src/get_models_node.cpp)
@@ -80,6 +82,22 @@ target_link_libraries(head_node ${ZMQ_LIBRARIES})
 install(TARGETS
   ${plugin_libs}
   head_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+add_executable(observe_object src/observe_object_node.cpp)
+ament_target_dependencies(observe_object ${dependencies})
+target_link_libraries(observe_object ${PROJECT_NAME})
+
+install(TARGETS
+  ${plugin_libs}
+  observe_object
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

@@ -161,14 +161,14 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
     graph_->update_node(node_1);
 
     if (distance_between_tfs < 5) {
-      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", tf_to_check);
+      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", model_names[i]);
       graph_->update_edge(edge_1);
     } else {
       geometry_msgs::msg::TransformStamped empty_tf;
       empty_tf.transform.translation.x = 0;
       empty_tf.transform.translation.y = 0;
       empty_tf.transform.translation.z = 0;
-      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", empty_tf);
+      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", "null");
       graph_->update_edge(edge_1);
     }
   }

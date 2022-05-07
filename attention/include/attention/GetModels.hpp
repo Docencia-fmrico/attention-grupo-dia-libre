@@ -38,9 +38,6 @@
 #include "ros2_knowledge_graph/graph_utils.hpp"
 #include "ros2_knowledge_graph/GraphNode.hpp"
 
-#define RIGHT -1
-#define LEFT 1
-
 namespace attention
 {
 

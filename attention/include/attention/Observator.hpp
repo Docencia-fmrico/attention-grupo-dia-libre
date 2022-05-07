@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ATTENTION__ATTENTION_HPP_
-#define ATTENTION__ATTENTION_HPP_
+#ifndef ATTENTION__OBSERVATOR_HPP_
+#define ATTENTION__OBSERVATOR_HPP_
 
 #include <memory>
 #include <cmath>
@@ -58,12 +58,12 @@ protected:
 
 
 private:
-  std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
+  //std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
   std::vector<geometry_msgs::msg::TransformStamped> tfs_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_;
-  void watch_object(geometry_msgs::msg::TransformStamped tf);
+  void watch_object(std::string tf);
 };
 }  // namespace follow_wall
 

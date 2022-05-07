@@ -17,6 +17,7 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "std_msgs/msg/string.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -30,20 +31,18 @@
 using rcl_interfaces::msg::ParameterType;
 using std::placeholders::_1;
 using CallbackReturnT = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+using namespace std::chrono_literals;
 
-class Observator : public rclcpp_lifecycle::LifecycleNode
+namespace attention
+
 {
-public:
   Observator::Observator()
-  : rclcpp_lifecycle::LifecycleNode("observator_node")
+  : LifecycleNode("observator_node")
   {
    // declare_parameter("speed", 0.34);
   }
 
-  using CallbackReturnT =
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
-
-  CallbackReturnT on_activate(const rclcpp_lifecycle::State & state) 
+  CallbackReturnT Observator::on_activate(const rclcpp_lifecycle::State & state) 
   {
     RCLCPP_INFO(get_logger(), "[%s] Activating from [%s] state...", get_name(), state.label().c_str());
 
@@ -57,7 +56,7 @@ public:
     return CallbackReturnT::SUCCESS;
   }
 
-  CallbackReturnT on_deactivate(const rclcpp_lifecycle::State & state) 
+  CallbackReturnT Observator::on_deactivate(const rclcpp_lifecycle::State & state) 
   {
     RCLCPP_INFO(get_logger(), "[%s] Deactivating from [%s] state...", get_name(), state.label().c_str());
     
@@ -66,32 +65,30 @@ public:
     return CallbackReturnT::SUCCESS;
   }
   
-  void do_work() 
+  void Observator::do_work() 
   {
     if (graph_->get_nodes().size())
     {   
       for (int i = 0; i < graph_->get_nodes().size(); i++)
       {
-        std::string name = graph_node.get_node_names()[i];
+        std::string name = graph_->get_node_names()[i];
         if (name != "World")
         {
-          geometry_msgs::msg::TransformStamped tf = graph_node.get_edges<geometry_msgs::msg::TransformStamped>(name, "World");
+          //auto edge_tf = graph_->get_edges<std::string>(name, "World");
+          geometry_msgs::msg::TransformStamped tf;// = edge_tf.content.tf_value;
           float x = tf.transform.translation.x;
           float y = tf.transform.translation.y;
           float z = tf.transform.translation.z;
           
           if ((x != 0) && (y != 0) && (z != 0))
           {
-            watch_object(tf);
+            watch_object(name);
           }
         }
-      }
-      
+      }  
     }
-
   }
-
-  void watch_object(geometry_msgs::msg::TransformStamped tf)
+  void Observator::watch_object(std::string tf)
   {
 
     geometry_msgs::msg::TransformStamped tf_to_check;
@@ -101,15 +98,16 @@ public:
     for (int i = 0; i < max_iterations; i++)
     {
       try { tf_to_check = tf_buffer_->lookupTransform(
-              transform_base_to, base_footprint,
+              tf, base_footprint,
               tf2::TimePointZero);
       } catch (tf2::TransformException & ex) {
-        RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", transform_base_to.c_str(), base_footprint.c_str(), ex.what());
+        RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", tf.c_str(), base_footprint.c_str(), ex.what());
         return;
       }
 
-      float y = tf.transform.translation.y;
-      float x = tf.transform.translation.x;
+      float y = tf_to_check.transform.translation.y;
+      float x = tf_to_check.transform.translation.x;
+      float z = tf_to_check.transform.translation.z;
       float horizontal_angle = atan2(y,x);
       float vertical_angel = atan2(y,z);
       
