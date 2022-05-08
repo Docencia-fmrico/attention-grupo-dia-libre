@@ -29,6 +29,9 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include <chrono>
+#include <thread>
+
 namespace attention {
 
 using rcl_interfaces::msg::ParameterType;
@@ -76,10 +79,10 @@ void
 GetModels::do_work() 
 {
   auto edge_tf = graph_->get_edges();
-  std::cout << "Edges: " << edge_tf.size() << std::endl;
+  std::cerr << "Edges: " << edge_tf.size() << std::endl;
   auto nodes_tf = graph_->get_nodes();
-  std::cout << "Nodes: " << nodes_tf.size() << std::endl;
-  std::cout << "------------------" << std::endl;
+  std::cerr << "Nodes: " << nodes_tf.size() << std::endl;
+  std::cerr << "------------------" << std::endl;
 }
 
 float 
@@ -180,6 +183,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
       auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", empty_tf);
       graph_->update_edge(edge_1);
     }
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 

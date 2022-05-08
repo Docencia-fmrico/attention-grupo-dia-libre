@@ -30,6 +30,10 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include <chrono>
+#include <thread>
+#include <ctime>
+
 using rcl_interfaces::msg::ParameterType;
 using std::placeholders::_1;
 using CallbackReturnT = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -75,44 +79,43 @@ namespace observe
   
   void Observator::do_work() 
   {
-    auto edge_tf = graph_->get_edges();
-    std::cout << edge_tf.size() << std::endl;
-    /*
-    if (graph_->get_nodes().size())
-    {   
-      for (int i = 0; i < graph_->get_nodes().size(); i++)
+    auto edge_list = graph_->get_edges();
+    if (edge_list.size() > 5)
+    {
+      for (int i = 0; i < edge_list.size(); i++)
       {
-        std::string name = graph_->get_node_names()[i];
-        std::cout << name << std::endl;
-        if (name != "World")
+        ros2_knowledge_graph_msgs::msg::Edge edge_map = edge_list[i];
+        //std::cout << "Origen: " << edge_map.source_node_id << " Destino: " << edge_map.target_node_id << std::endl;
+        auto tf_edge = graph_->get_edges<geometry_msgs::msg::TransformStamped>(edge_map.source_node_id, edge_map.target_node_id);
+        auto content_tf_opt = ros2_knowledge_graph::get_content<geometry_msgs::msg::TransformStamped>(tf_edge[0].content);
+        geometry_msgs::msg::TransformStamped value_tf = content_tf_opt.value();
+        float x = value_tf.transform.translation.x;
+        float y = value_tf.transform.translation.y;
+        //std::cout << edge_map.source_node_id << ": " << x << " " << y << " " << z << std::endl;
+        if ((x != 0) && (y != 0))
         {
-          auto edge_tf = graph_->get_edges();
-          std::cout << edge_tf.size() << std::endl;
-          /*
-          geometry_msgs::msg::TransformStamped tf = edge_tf[0].content.tf_value;
-          float x = tf.transform.translation.x;
-          float y = tf.transform.translation.y;
-          float z = tf.transform.translation.z;
-          std::cout << x << " " << y << " " << z << std::endl;
-          if ((x != 0) && (y != 0) && (z != 0))
-          {
-            //watch_object(name);
-          }
+          watch_object(edge_map.source_node_id);
         }
-      }  
+      }
     }
-    //watch_object("cabinet");
-    */
+    //std::cerr << "PACO TONTO" << std::endl;
   }
   void Observator::watch_object(std::string tf)
   {
 
     geometry_msgs::msg::TransformStamped tf_to_check;
     std::string base_footprint = "base_footprint";
-    int max_iterations = 20;
+    std::cout << "---------------------" << tf << "----------------------" << std::endl;
+    std::cerr << "1" << std::endl;
+    time_t ts0 = time(0);
 
-    for (int i = 0; i < max_iterations; i++)
+
+    std::cerr << "2" << std::endl;
+
+    while (( time(0) - ts0 ) < 4)
     {
+      std::cerr << tf << " 3" << std::endl;
+      //std::cout << time(0) - ts0 << std::endl;
       try { tf_to_check = tf_buffer_->lookupTransform(
               tf, base_footprint,
               tf2::TimePointZero);
@@ -120,30 +123,23 @@ namespace observe
         RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", tf.c_str(), base_footprint.c_str(), ex.what());
         return;
       }
+      std::cerr << tf << " 4" << std::endl;
 
       float y = tf_to_check.transform.translation.y;
       float x = tf_to_check.transform.translation.x;
       float z = tf_to_check.transform.translation.z;
+      
 
       float horizontal_angle = atan2(-y,-x);
-      
-      /*
-      float vertical_angle = atan2(z,x);
-      float vertical_angle2 = atan2(-z,x);
-      float vertical_angle3 = atan2(z,-x);
-      float vertical_angle4 = atan2(-z,-x);
-      //float horizontal_angle = atan2(y,x);
-      //float horizontal_angle1 = atan2(-y,x);
-      //float horizontal_angle2 = atan2(y,-x);
-      std::cout << vertical_angle << std::endl;
-      std::cout << vertical_angle2 << std::endl;
-      std::cout << vertical_angle3 << std::endl;
-      std::cout << vertical_angle4 << std::endl;*/
+      //std::cout << horizontal_angle << std::endl;
+
+      //std::cout << tf << std::endl;
       
       if (abs(horizontal_angle) > 1.57)
       {
         return;
       }
+      std::cerr << tf << " 5" << std::endl;
       trajectory_msgs::msg::JointTrajectory message;
 
       message.header.stamp = now();
@@ -168,8 +164,8 @@ namespace observe
       message.points[0].time_from_start = rclcpp::Duration(1s);
 
       pub_->publish(message);
-
     }
+
 
     return;
 
@@ -178,7 +174,6 @@ namespace observe
   void
   Observator::graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg)
   {
-    std::cout << msg->graph.edges.size() << std::endl;
     return;
   }
 

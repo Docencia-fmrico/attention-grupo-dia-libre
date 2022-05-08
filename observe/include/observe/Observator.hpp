@@ -64,6 +64,8 @@ private:
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
   rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_;
   rclcpp::Subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>::SharedPtr sub_;
+  rclcpp::Time ts_;
+  int indx;
   void graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg);
   void watch_object(std::string tf);
 };
