@@ -15,13 +15,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include "attention/Observator.hpp"
+#include "observe/Observator.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto node = std::make_shared<attention::Observator>();
+  auto node = std::make_shared<observe::Observator>();
 
   node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
   node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);

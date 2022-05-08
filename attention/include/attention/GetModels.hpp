@@ -74,6 +74,10 @@ private:
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
 
+  //No va el grafo no se por que
+  //rclcpp_lifecycle::LifecyclePublisher<std::vector<std::string>>::SharedPtr pub_;
+  //std::vector<std::string>> names_;
+
 };
 
 }  // namespace attention

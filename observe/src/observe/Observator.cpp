@@ -22,7 +22,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
-#include "attention/Observator.hpp"
+#include "observe/Observator.hpp"
+#include "ros2_knowledge_graph/graph_utils.hpp"
+
 
 #include <iostream>
 #include <cstdlib>
@@ -33,7 +35,7 @@ using std::placeholders::_1;
 using CallbackReturnT = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 using namespace std::chrono_literals;
 
-namespace attention
+namespace observe
 
 {
   Observator::Observator()
@@ -46,12 +48,18 @@ namespace attention
   {
     RCLCPP_INFO(get_logger(), "[%s] Activating from [%s] state...", get_name(), state.label().c_str());
 
+    pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>("/head_controller/joint_trajectory", 10);
+    sub_ = create_subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>(
+    "graph_update", 10, std::bind(&Observator::graph_cb, this, _1));
+
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     transform_listener_ =std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
     graph_ = std::make_shared<ros2_knowledge_graph::GraphNode>(shared_from_this());
 
-    pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>("/head_controller/joint_trajectory", 10);
+    pub_->on_activate();
+
+    
     
     return CallbackReturnT::SUCCESS;
   }
@@ -60,33 +68,41 @@ namespace attention
   {
     RCLCPP_INFO(get_logger(), "[%s] Deactivating from [%s] state...", get_name(), state.label().c_str());
     
-    //sub_->on_deactivate();
+    pub_->on_deactivate();
     
     return CallbackReturnT::SUCCESS;
   }
   
   void Observator::do_work() 
   {
+    auto edge_tf = graph_->get_edges();
+    std::cout << edge_tf.size() << std::endl;
+    /*
     if (graph_->get_nodes().size())
     {   
       for (int i = 0; i < graph_->get_nodes().size(); i++)
       {
         std::string name = graph_->get_node_names()[i];
+        std::cout << name << std::endl;
         if (name != "World")
         {
-          //auto edge_tf = graph_->get_edges<std::string>(name, "World");
-          geometry_msgs::msg::TransformStamped tf;// = edge_tf.content.tf_value;
+          auto edge_tf = graph_->get_edges();
+          std::cout << edge_tf.size() << std::endl;
+          /*
+          geometry_msgs::msg::TransformStamped tf = edge_tf[0].content.tf_value;
           float x = tf.transform.translation.x;
           float y = tf.transform.translation.y;
           float z = tf.transform.translation.z;
-          
+          std::cout << x << " " << y << " " << z << std::endl;
           if ((x != 0) && (y != 0) && (z != 0))
           {
-            watch_object(name);
+            //watch_object(name);
           }
         }
       }  
     }
+    //watch_object("cabinet");
+    */
   }
   void Observator::watch_object(std::string tf)
   {
@@ -108,17 +124,29 @@ namespace attention
       float y = tf_to_check.transform.translation.y;
       float x = tf_to_check.transform.translation.x;
       float z = tf_to_check.transform.translation.z;
-      float horizontal_angle = atan2(y,x);
-      float vertical_angel = atan2(y,z);
+
+      float horizontal_angle = atan2(-y,-x);
       
-      if (abs(horizontal_angle) > 1.57 || abs(vertical_angel) > 1)
+      /*
+      float vertical_angle = atan2(z,x);
+      float vertical_angle2 = atan2(-z,x);
+      float vertical_angle3 = atan2(z,-x);
+      float vertical_angle4 = atan2(-z,-x);
+      //float horizontal_angle = atan2(y,x);
+      //float horizontal_angle1 = atan2(-y,x);
+      //float horizontal_angle2 = atan2(y,-x);
+      std::cout << vertical_angle << std::endl;
+      std::cout << vertical_angle2 << std::endl;
+      std::cout << vertical_angle3 << std::endl;
+      std::cout << vertical_angle4 << std::endl;*/
+      
+      if (abs(horizontal_angle) > 1.57)
       {
         return;
       }
       trajectory_msgs::msg::JointTrajectory message;
 
       message.header.stamp = now();
-      //std::cerr << "2.1.1" << std::endl;
 
       message.joint_names.push_back("head_1_joint");
       message.joint_names.push_back("head_2_joint");
@@ -129,10 +157,10 @@ namespace attention
       message.points[0].accelerations.resize(2);
 
       message.points[0].positions[0] = horizontal_angle;
-      message.points[0].positions[1] = vertical_angel;
+      message.points[0].positions[1] = 0; //vertical_angle;
 
-      message.points[0].velocities[0] = 0.3;
-      message.points[0].velocities[1] = 0.3;
+      message.points[0].velocities[0] = 0.2;
+      message.points[0].velocities[1] = 0.2;
 
       message.points[0].accelerations[0] = 0.2;
       message.points[0].accelerations[1] = 0.2;
@@ -145,6 +173,13 @@ namespace attention
 
     return;
 
+  }
+
+  void
+  Observator::graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg)
+  {
+    std::cout << msg->graph.edges.size() << std::endl;
+    return;
   }
 
 

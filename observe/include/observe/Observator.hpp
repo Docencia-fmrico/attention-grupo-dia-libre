@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ATTENTION__OBSERVATOR_HPP_
-#define ATTENTION__OBSERVATOR_HPP_
+#ifndef OBSERVE__OBSERVATOR_HPP_
+#define OBSERVE__OBSERVATOR_HPP_
 
 #include <memory>
 #include <cmath>
@@ -38,7 +38,7 @@
 #include "ros2_knowledge_graph/graph_utils.hpp"
 #include "ros2_knowledge_graph/GraphNode.hpp"
 
-namespace attention
+namespace observe
 {
 
 using CallbackReturnT = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
@@ -58,13 +58,15 @@ protected:
 
 
 private:
-  //std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
+  std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
   std::vector<geometry_msgs::msg::TransformStamped> tfs_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
-  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_;
+  rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_;
+  rclcpp::Subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>::SharedPtr sub_;
+  void graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg);
   void watch_object(std::string tf);
 };
 }  // namespace follow_wall
 
-#endif  // FOLLOW_WALL__FOLLOW_WALL_HPP_
+#endif  // observe_OBSERVATOR_HPP_

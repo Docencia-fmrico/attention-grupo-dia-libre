@@ -49,7 +49,7 @@ public:
     message.points[0].velocities.resize(2);
     message.points[0].accelerations.resize(2);
     //std::cerr << "2.2" << std::endl;
-    message.points[0].positions[0] = -1;
+    message.points[0].positions[0] = 0;
     message.points[0].positions[1] = 0;
     message.points[0].velocities[0] = 0.2;
     message.points[0].velocities[1] = 0.2;

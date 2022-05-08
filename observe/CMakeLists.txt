@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(attention)
+project(observe)
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -52,35 +52,18 @@ set(dependencies
 include_directories(include ${ZMQ_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} SHARED
-  src/attention/GetModels.cpp
+  src/observe/Observator.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
-add_executable(get_models_node src/get_models_node.cpp)
-ament_target_dependencies(get_models_node ${dependencies})
-target_link_libraries(get_models_node ${PROJECT_NAME})
+add_executable(observe_object_node src/observe_object_node.cpp)
+ament_target_dependencies(observe_object_node ${dependencies})
+target_link_libraries(observe_object_node ${PROJECT_NAME})
 
 install(TARGETS
   ${plugin_libs}
-  get_models_node
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY include/
-  DESTINATION include/
-)
-
-
-add_executable(head_node src/set_headjoint.cpp)
-ament_target_dependencies(head_node ${dependencies})
-target_link_libraries(head_node ${ZMQ_LIBRARIES})
-
-install(TARGETS
-  ${plugin_libs}
-  head_node
+  observe_object_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
