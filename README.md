@@ -88,7 +88,7 @@ Con esto el robot ya podría girar la cabeza hasta el modelo deseado y mantener 
 ![WhatsApp Image 2022-05-09 at 11 36 11 PM](https://user-images.githubusercontent.com/73531592/167507720-30ad07df-fdd2-4779-ae5d-bfd6db0e3937.jpeg)
 
 - Guillermo Bernal Ruiz 
-@gbernalr
+@ gbernalr
 - Juan Camilo Carmona Sanchez @camilo-0715
 - Luis Miguel López Martín @chuismiguel
 - Jose Manuel Tostado Felipe @josetost
