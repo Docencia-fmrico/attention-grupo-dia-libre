@@ -1,3 +1,48 @@
+# Attention objects with graphs.
+
+In this practice we were asked to implement an object vision system in ROS2 using the graph tool and subscribing to the /get_model_states topic of gazbo to obtain the positions of all the models in the world and attend only those that were less than 5 meters away.
+
+### Navigation.
+The first thing we had to do was to make the robot move around the map, to detect the different objects in the area, to implement this functionality what we have done was to make use of previous practices, in this case the planning.
+Our navigation is based on an "infinite" plan consisting of several goals of specific positions. Once it reaches the last position it goes back to the first plan.
+```
+(:durative-action move_location
+    :parameters (?robot - robot ?prev_room - location ?next_room - location)
+    :duration (= ?duration 5)
+    :condition 
+      (and
+        (at start(robotat ?robot ?prev_room))
+      )
+    :effect 
+      (and  
+        (at end(robotat ?robot ?next_room))
+        (at start(not(robotat ?robot ?prev_room)))
+      )
+)
+```
+In addition we had to modify certain parameters of the navigation so that the robot moved faster and the goal tolerance was much less restrictive.
+
+## Attention.
+This has been the most difficult part, because to start with we had to subscribe to the "/get_model_states" topic of the gazebo itself. To do this we needed to install a plugin within the simulator environment to get the topic, because it did not exist. This topic what it does is to tell you the position of all the objects that are inside our simulation. 
+
+![WhatsApp Image 2022-05-09 at 11 36 12 PM](https://user-images.githubusercontent.com/73531592/167507706-a49950b0-d766-407e-8571-20861923c202.jpeg)
+
+Once the topic was installed we had to save all these positions of the tfs of these objects in a graph. In this graph we save the positions of the tfs that are within the range of 5 meters or in case of being at a greater distance, an empty tf.
+
+![WhatsApp Image 2022-05-09 at 11 36 10 PM](https://user-images.githubusercontent.com/73531592/167507362-60f453ad-22e2-462a-b6a9-70ac85cc4719.jpeg)
+
+![WhatsApp Image 2022-05-09 at 11 37 26 PM](https://user-images.githubusercontent.com/73531592/167507397-15ec6c63-e596-4e45-a8cf-d1db78f032b5.jpeg)
+
+Once the graph was obtained, we simply had to extract the information from the graph and with this information move the joint of the robot's head to observe the object in question.
+To move the head of the robot as all the tfs had height 0, the only thing we had to do was to move sideways. To obtain the rotation of the head with respect to the desired point (the object to be observed), we have obtained the coordinates of the model and the robot thanks to the tfs and we have made an atan2, to obtain the desired angle.
+With this the robot could now turn its head to the desired model and keep the view for about 5 seconds.
+
+![WhatsApp Image 2022-05-09 at 11 36 11 PM](https://user-images.githubusercontent.com/73531592/167507720-30ad07df-fdd2-4779-ae5d-bfd6db0e3937.jpeg)
+
+
+
+###                                                                     ---- Español ----
+
 # Atención objectos con grafos.
 
 ### Resumen de la práctica.
