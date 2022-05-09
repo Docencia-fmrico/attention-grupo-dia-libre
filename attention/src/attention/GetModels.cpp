@@ -57,12 +57,6 @@ GetModels::on_activate(const rclcpp_lifecycle::State & state)
   transform_listener_ =std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   graph_ = std::make_shared<ros2_knowledge_graph::GraphNode>(shared_from_this());
-
-  //USAR SI NO VA LO DEL GRAFO
-  //pub_ = create_publisher<std::vector<std::string>>("/nomeva/elgrafo", 10);
-
-  //pub_->on_activate();
-
   
   return CallbackReturnT::SUCCESS;
 }

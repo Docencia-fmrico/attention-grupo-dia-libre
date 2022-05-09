@@ -45,7 +45,6 @@ namespace observe
   Observator::Observator()
   : LifecycleNode("observator_node")
   {
-   // declare_parameter("speed", 0.34);
   }
 
   CallbackReturnT Observator::on_activate(const rclcpp_lifecycle::State & state) 
@@ -98,7 +97,6 @@ namespace observe
         }
       }
     }
-    //std::cerr << "PACO TONTO" << std::endl;
   }
   void Observator::watch_object(std::string tf)
   {
@@ -139,6 +137,7 @@ namespace observe
       {
         return;
       }
+
       std::cerr << tf << " 5" << std::endl;
       trajectory_msgs::msg::JointTrajectory message;
 
@@ -165,7 +164,6 @@ namespace observe
 
       pub_->publish(message);
     }
-
 
     return;
 
