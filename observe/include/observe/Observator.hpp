@@ -38,6 +38,8 @@
 #include "ros2_knowledge_graph/graph_utils.hpp"
 #include "ros2_knowledge_graph/GraphNode.hpp"
 
+#include <ctime>
+
 namespace observe
 {
 
@@ -65,6 +67,7 @@ private:
   rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_;
   rclcpp::Subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>::SharedPtr sub_;
   rclcpp::Time ts_;
+  time_t ts0_;
   int indx;
   void graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg);
   void watch_object(std::string tf);
