@@ -84,7 +84,7 @@ get_distance(std::vector<float> a, std::vector<float> b)
 {
   float dif_x = (a[0]-b[0])*(a[0]-b[0]);
   float dif_y = (a[1]-b[1])*(a[1]-b[1]);
-  return abs(sqrt(dif_x + dif_y));
+  return fabs(sqrt(dif_x + dif_y));
 }
 
 void
