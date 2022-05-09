@@ -72,11 +72,13 @@ GetModels::on_deactivate(const rclcpp_lifecycle::State & state)
 void 
 GetModels::do_work() 
 {
+  /*
   auto edge_tf = graph_->get_edges();
   std::cerr << "Edges: " << edge_tf.size() << std::endl;
   auto nodes_tf = graph_->get_nodes();
   std::cerr << "Nodes: " << nodes_tf.size() << std::endl;
   std::cerr << "------------------" << std::endl;
+  */
 }
 
 float 
@@ -168,14 +170,14 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
     graph_->update_node(node_1);
 
     if (distance_between_tfs > 5) {
-      object_transform_from = "null";
+      object_transform_from = "empty";
     } else {
       models_in_range.push_back(model_names[i]);
     }
 
     auto edge_1 = ros2_knowledge_graph::new_edge<std::string>(model_names[i], "World", object_transform_from);
     graph_->update_edge(edge_1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
   
   std::cout << "MODELS IN RANGE " << std::endl;

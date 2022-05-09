@@ -62,9 +62,6 @@ private:
   std::vector<std::string> models_in_range;
   
   std::vector<std::string> tfs_name;
-  std::vector<geometry_msgs::msg::TransformStamped> tfs_to_graph;
-
-  std::vector<std::string> nodes_in_graph;
 
   void model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg);
   void add_nodes_to_graph();
@@ -74,10 +71,6 @@ private:
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> broadcaster_;
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
-
-  //No va el grafo no se por que
-  //rclcpp_lifecycle::LifecyclePublisher<std::vector<std::string>>::SharedPtr pub_;
-  //std::vector<std::string>> names_;
 
 };
 

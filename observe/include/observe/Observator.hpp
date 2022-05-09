@@ -61,14 +61,14 @@ protected:
 
 private:
   std::shared_ptr<ros2_knowledge_graph::GraphNode> graph_;
-  std::vector<geometry_msgs::msg::TransformStamped> tfs_;
+
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> transform_listener_{nullptr};
   rclcpp_lifecycle::LifecyclePublisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr pub_;
-  rclcpp::Subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>::SharedPtr sub_;
-  rclcpp::Time ts_;
+
+  bool looking_print_;
   time_t ts0_;
-  int indx;
+  int indx_;
   void graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg);
   void watch_object(std::string tf);
 };

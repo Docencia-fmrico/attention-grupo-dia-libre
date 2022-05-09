@@ -39,6 +39,12 @@ using std::placeholders::_1;
 using CallbackReturnT = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 using namespace std::chrono_literals;
 
+
+#define LOOKING_TIME 2
+#define SAFE_TIME 5
+#define FOCUS_ANGLE 0.5
+#define PI_HALVES 1.57
+
 namespace observe
 
 {
@@ -52,8 +58,6 @@ namespace observe
     RCLCPP_INFO(get_logger(), "[%s] Activating from [%s] state...", get_name(), state.label().c_str());
 
     pub_ = create_publisher<trajectory_msgs::msg::JointTrajectory>("/head_controller/joint_trajectory", 10);
-    sub_ = create_subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>(
-    "graph_update", 10, std::bind(&Observator::graph_cb, this, _1));
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     transform_listener_ =std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -61,7 +65,7 @@ namespace observe
     graph_ = std::make_shared<ros2_knowledge_graph::GraphNode>(shared_from_this());
     ts0_ = time(0);
     pub_->on_activate();
-    indx = 0;
+    indx_ = 0;
 
     return CallbackReturnT::SUCCESS;
   }
@@ -82,31 +86,23 @@ namespace observe
     if (edge_list.size() == 0){
       return;
     }
-    if (indx >= edge_list.size()) {
-      indx = 0;
+    if (indx_ >= edge_list.size()) {
+      indx_ = 0;
+      looking_print_ = false;
     }
 
-    if (time(0) - ts0_  > 2) {
-      ts0_ = time(0);
-      indx++;
-      if (indx >= edge_list.size()) {
-        indx = 0;
-      }
-    }
-
-    ros2_knowledge_graph_msgs::msg::Edge edge_map = edge_list[indx];
-    auto tf_edge = graph_->get_edges<std::string>(edge_map.source_node_id, edge_map.target_node_id);
-    auto content_tf_opt = ros2_knowledge_graph::get_content<std::string>(tf_edge[0].content);
+    auto content_tf_opt = ros2_knowledge_graph::get_content<std::string>(edge_list[indx_].content);
     std::string tf_name = content_tf_opt.value();
 
-    if (tf_name != "null")
+    if (tf_name != "empty")
     {
-      watch_object(edge_map.source_node_id);
+      watch_object(tf_name);
     } 
       else {
-      indx++;
-      if (indx >= edge_list.size()) {
-        indx = 0;
+      indx_++;
+      looking_print_ = false;
+      if (indx_ >= edge_list.size()) {
+        indx_ = 0;
       }
     }
   }
@@ -115,14 +111,13 @@ namespace observe
   {
 
     geometry_msgs::msg::TransformStamped tf_to_check;
-    std::string base_footprint = "head_2_link";
-    std::cout << "Looking at " << item_name << std::endl;
+    std::string base_tf = "base_footprint";
 
     try { tf_to_check = tf_buffer_->lookupTransform(
-            item_name, base_footprint,
+            base_tf, item_name,
             tf2::TimePointZero);
     } catch (tf2::TransformException & ex) {
-      RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", item_name, base_footprint.c_str(), ex.what());
+      RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", item_name, base_tf.c_str(), ex.what());
       return;
     }
 
@@ -131,14 +126,32 @@ namespace observe
     float z = tf_to_check.transform.translation.z;
 
     float horizontal_angle = atan2(y,x);
-
     
-    if (fabs(horizontal_angle) > 1.57)
+    if (fabs(horizontal_angle) > PI_HALVES)
     {
       std::cout << item_name << " unreachable" << std::endl;
-      indx++;
+      indx_++;
       return;
     }
+
+    if (!looking_print_) {
+      std::cout << "Looking at " << item_name << std::endl;
+      looking_print_ = true;
+    }
+
+    if (fabs(horizontal_angle) < FOCUS_ANGLE) {
+       if (time(0) - ts0_  > LOOKING_TIME) {
+        ts0_ = time(0);
+        indx_++;
+        looking_print_ = false;
+      }
+    }
+
+    if (time(0) - ts0_  > SAFE_TIME) {
+        ts0_ = time(0);
+        indx_++;
+        looking_print_ = false;
+      }
 
     trajectory_msgs::msg::JointTrajectory message;
 
