@@ -27,7 +27,8 @@ Además hemos tenido que modificar ciertos parametros de la navegación para que
 
 ## Atención.
 Esta ha sido la parte mas difícil, pues para empezar teníamos que suscribirnos al topic de “/get_model_states” del propio gazebo. Para hacer esto hemos necesitado instalar un plugin dentro del entorno del simulador para poder obtener el topic, pues de por si no existía. Este topic lo que hace es decirte la posición de todos los objetos que están dentro de nuestra simulación.
-![WhatsApp Image 2022-05-09 at 11 37 26 PM](https://user-images.githubusercontent.com/73531592/167507471-444275cd-b48b-4332-85a3-339fdcbe8574.jpeg)
+
+![WhatsApp Image 2022-05-09 at 11 36 12 PM](https://user-images.githubusercontent.com/73531592/167507706-a49950b0-d766-407e-8571-20861923c202.jpeg)
 
 Una vez instalado el topic debíamos guardar todas estas posiciones de las tfs de estos objetos dentro de un grafo. En este grafo guardamos las posiciones de las tfs que están dentro del rango de 5 metros o en caso de estar a mayor distancia, una tf vacia.
 
@@ -39,5 +40,4 @@ Una vez obtenido el grafo simplemente nos quedaba, sacar la información del gra
 Para mover la cabeza del robot como todas las tfs tenían altura 0, lo único que hemos tenido que hacer ha sido movernos hacia los lados. Para obtener la rotación de la cabeza con respecto al punto deseado ( el objeto al que atender), hemos conseguido las coordenadas del modelo y del robot gracias a las tfs y hemos realizado un atan2, para conseguir el ángulo deseado.
 Con esto el robot ya podría girar la cabeza hasta el modelo deseado y mantener la vista unos 5 segundos.
 
-![WhatsApp Image 2022-05-09 at 11 37 26 PM](https://user-images.githubusercontent.com/73531592/167507605-0a358fa0-f106-435f-aa6d-79a38634405e.jpeg)
-
+![WhatsApp Image 2022-05-09 at 11 36 11 PM](https://user-images.githubusercontent.com/73531592/167507720-30ad07df-fdd2-4779-ae5d-bfd6db0e3937.jpeg)
