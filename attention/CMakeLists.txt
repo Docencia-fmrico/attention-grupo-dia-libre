@@ -13,12 +13,21 @@ find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(ros2_knowledge_graph REQUIRED)
+
+find_package(trajectory_msgs REQUIRED)
+
+find_package(ros2_knowledge_graph_msgs REQUIRED)
+
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 find_package(ZMQ)
 if(ZMQ_FOUND)
     message(STATUS "ZeroMQ found.")
     add_definitions(-DZMQ_FOUND)
-else()
+else()  
   message(WARNING "ZeroMQ NOT found. Not including PublisherZMQ.")
 endif()
 
@@ -31,18 +40,47 @@ set(dependencies
     geometry_msgs
     gazebo_msgs
     ament_index_cpp
+    ros2_knowledge_graph
+    trajectory_msgs
+    ros2_knowledge_graph_msgs
+    
+    tf2
+    tf2_ros
+    tf2_geometry_msgs
 )
 
 include_directories(include ${ZMQ_INCLUDE_DIRS})
 
+add_library(${PROJECT_NAME} SHARED
+  src/attention/GetModels.cpp
+)
+
+ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
 add_executable(get_models_node src/get_models_node.cpp)
 ament_target_dependencies(get_models_node ${dependencies})
-target_link_libraries(get_models_node ${ZMQ_LIBRARIES})
+target_link_libraries(get_models_node ${PROJECT_NAME})
 
 install(TARGETS
   ${plugin_libs}
   get_models_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+
+add_executable(head_node src/set_headjoint.cpp)
+ament_target_dependencies(head_node ${dependencies})
+target_link_libraries(head_node ${ZMQ_LIBRARIES})
+
+install(TARGETS
+  ${plugin_libs}
+  head_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

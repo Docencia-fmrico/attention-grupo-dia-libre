@@ -14,30 +14,25 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
-#include "gazebo_msgs/msg/model_states.hpp"
 
-rclcpp::Node::SharedPtr node = nullptr;
-
-void callback(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
-{
-  std::vector<int> models;
-  for (int i = 0; i < msg->name.size(); ++i)
-  {
-    std::cout << "Model: " << msg->name[i] << std::endl;
-    std::cout << msg->pose[i].position.x << " " << msg->pose[i].position.y << std::endl;
-  }
-}
+#include "attention/GetModels.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  node = rclcpp::Node::make_shared("simple_node_sub");
-  auto subscription = node->create_subscription<gazebo_msgs::msg::ModelStates>(
-    "/gazebo/model_states", 10, callback);
-  
-  rclcpp::spin(node);
+  auto node = std::make_shared<attention::GetModels>();
+
+  node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+  node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+
+  rclcpp::Rate rate(10);
+  while (rclcpp::ok()) {
+    node->do_work();
+
+    rclcpp::spin_some(node->get_node_base_interface());
+    rate.sleep();
+  }
 
   rclcpp::shutdown();
 
