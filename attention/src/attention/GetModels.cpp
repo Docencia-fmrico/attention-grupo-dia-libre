@@ -84,7 +84,7 @@ get_distance(std::vector<float> a, std::vector<float> b)
 {
   float dif_x = (a[0]-b[0])*(a[0]-b[0]);
   float dif_y = (a[1]-b[1])*(a[1]-b[1]);
-  return abs(sqrt(dif_x + dif_y));
+  return fabs(sqrt(dif_x + dif_y));
 }
 
 void
@@ -144,6 +144,7 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
   robot_position.push_back(tiago_tf.transform.translation.x);
   robot_position.push_back(tiago_tf.transform.translation.y);
 
+  models_in_range.clear();
   for (int i = 0; i < model_names.size(); i++) {
 
     std::string object_transform_from = model_names[i];
@@ -166,18 +167,20 @@ GetModels::model_state_cb(const gazebo_msgs::msg::ModelStates::SharedPtr msg)
     auto node_1 = ros2_knowledge_graph::new_node(model_names[i], "object");
     graph_->update_node(node_1);
 
-    if (distance_between_tfs < 5) {
-      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", tf_to_check);
-      graph_->update_edge(edge_1);
+    if (distance_between_tfs > 5) {
+      object_transform_from = "null";
     } else {
-      geometry_msgs::msg::TransformStamped empty_tf;
-      empty_tf.transform.translation.x = 0;
-      empty_tf.transform.translation.y = 0;
-      empty_tf.transform.translation.z = 0;
-      auto edge_1 = ros2_knowledge_graph::new_edge(model_names[i], "World", empty_tf);
-      graph_->update_edge(edge_1);
+      models_in_range.push_back(model_names[i]);
     }
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    auto edge_1 = ros2_knowledge_graph::new_edge<std::string>(model_names[i], "World", object_transform_from);
+    graph_->update_edge(edge_1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  
+  std::cout << "MODELS IN RANGE " << std::endl;
+  for (int i = 0; i < models_in_range.size(); i++) {
+    std::cout << models_in_range[i] << std::endl;
   }
 }
 

@@ -91,45 +91,46 @@ namespace observe
     }
 
     ros2_knowledge_graph_msgs::msg::Edge edge_map = edge_list[indx];
-    std::cout << "Origen: " << edge_map.source_node_id << " Destino: " << edge_map.target_node_id << std::endl;
-    auto tf_edge = graph_->get_edges<geometry_msgs::msg::TransformStamped>(edge_map.source_node_id, edge_map.target_node_id);
-    auto content_tf_opt = ros2_knowledge_graph::get_content<geometry_msgs::msg::TransformStamped>(tf_edge[0].content);
-    geometry_msgs::msg::TransformStamped value_tf = content_tf_opt.value();
-    float x = value_tf.transform.translation.x;
-    float y = value_tf.transform.translation.y;
-    // std::cout << edge_map.source_node_id << ": " << x << " " << y << std::endl;
-    if ((x != 0) && (y != 0))
+    auto tf_edge = graph_->get_edges<std::string>(edge_map.source_node_id, edge_map.target_node_id);
+    auto content_tf_opt = ros2_knowledge_graph::get_content<std::string>(tf_edge[0].content);
+    std::string tf_name = content_tf_opt.value();
+
+    if (tf_name != "null")
     {
       watch_object(edge_map.source_node_id);
+    } else {
+      indx++;
+      if (indx >= edge_list.size()) {
+        indx = 0;
+      }
     }
   }
 
-  void Observator::watch_object(std::string tf)
+  void Observator::watch_object(std::string item_name)
   {
 
     geometry_msgs::msg::TransformStamped tf_to_check;
     std::string base_footprint = "base_footprint";
-    std::cout << "---------------------" << tf << "----------------------" << std::endl;
+    std::cout << "Looking at " << item_name << std::endl;
 
     try { tf_to_check = tf_buffer_->lookupTransform(
-            tf, base_footprint,
+            item_name, base_footprint,
             tf2::TimePointZero);
     } catch (tf2::TransformException & ex) {
-      RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", tf.c_str(), base_footprint.c_str(), ex.what());
+      RCLCPP_INFO(get_logger(), "Could not transform %s to %s: %s", item_name, base_footprint.c_str(), ex.what());
       return;
     }
 
     float y = tf_to_check.transform.translation.y;
     float x = tf_to_check.transform.translation.x;
     float z = tf_to_check.transform.translation.z;
-    
 
     float horizontal_angle = atan2(y,x);
 
     
-    if (abs(horizontal_angle) > 1.57)
+    if (fabs(horizontal_angle) > 1.57)
     {
-      std::cout << tf << " unreachable" << std::endl;
+      std::cout << item_name << " unreachable" << std::endl;
       return;
     }
 
