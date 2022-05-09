@@ -77,9 +77,13 @@ namespace observe
   
   void Observator::do_work() 
   {
+    
     auto edge_list = graph_->get_edges();
     if (edge_list.size() == 0){
       return;
+    }
+    if (indx >= edge_list.size()) {
+      indx = 0;
     }
 
     if (time(0) - ts0_  > 2) {
@@ -98,7 +102,8 @@ namespace observe
     if (tf_name != "null")
     {
       watch_object(edge_map.source_node_id);
-    } else {
+    } 
+      else {
       indx++;
       if (indx >= edge_list.size()) {
         indx = 0;
@@ -110,7 +115,7 @@ namespace observe
   {
 
     geometry_msgs::msg::TransformStamped tf_to_check;
-    std::string base_footprint = "base_footprint";
+    std::string base_footprint = "head_2_link";
     std::cout << "Looking at " << item_name << std::endl;
 
     try { tf_to_check = tf_buffer_->lookupTransform(
@@ -131,6 +136,7 @@ namespace observe
     if (fabs(horizontal_angle) > 1.57)
     {
       std::cout << item_name << " unreachable" << std::endl;
+      indx++;
       return;
     }
 
