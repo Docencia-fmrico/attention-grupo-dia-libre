@@ -68,7 +68,7 @@ private:
   rclcpp::Subscription<ros2_knowledge_graph_msgs::msg::GraphUpdate>::SharedPtr sub_;
   rclcpp::Time ts_;
   time_t ts0_;
-  int indx;
+  int indx_;
   void graph_cb(const ros2_knowledge_graph_msgs::msg::GraphUpdate::SharedPtr msg);
   void watch_object(std::string tf);
 };
